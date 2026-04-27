@@ -1,15 +1,26 @@
-app.get("/", (req, res) => {
-  res.send("Server is running");
-});
-
 const express = require("express");
 const session = require("express-session");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 
-const app = express();
+const app = express(); // MUST be before app.get
 
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
+app.use(
+  session({
+    secret: "secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+// ================= ROUTES =================
+
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
+});
 // ================= DB =================
 const db = new sqlite3.Database("database.db");
 
