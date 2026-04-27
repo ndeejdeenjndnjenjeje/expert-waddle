@@ -46,17 +46,18 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   if (username !== ADMIN_USER) {
-    return res.status(401).send("Wrong login");
+    return res.status(401).json({ success: false, message: "Wrong login" });
   }
 
   const match = await bcrypt.compare(password, passwordHash);
 
   if (!match) {
-    return res.status(401).send("Wrong login");
+    return res.status(401).json({ success: false, message: "Wrong login" });
   }
 
   req.session.user = username;
-  res.send("Logged in");
+
+  return res.json({ success: true, message: "Logged in" });
 });
 
 // logout
@@ -80,6 +81,29 @@ app.get("/", (req, res) => {
 
 app.get("/api/links", (req, res) => {
   res.json(loadLinks());
+});
+
+app.get("/login", (req, res) => {
+  res.sendFile(__dirname + "/public/login.html");
+});
+
+app.get("/:slug", (req, res) => {
+  const slug = req.params.slug;
+
+  const link = db.prepare("SELECT * FROM links WHERE slug = ?").get(slug);
+
+  if (!link) {
+    return res.status(404).send("Not found");
+  }
+
+  let url = link.url;
+
+  // ✅ FIX: ensure full URL
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = "https://" + url;
+  }
+
+  res.redirect(url);
 });
 
 app.post("/api/add", requireLogin, (req, res) => {
